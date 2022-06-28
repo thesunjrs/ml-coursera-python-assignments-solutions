@@ -176,9 +176,11 @@ def multivariateGaussian(X, mu, Sigma2):
         Sigma2 = np.diag(Sigma2)
 
     X = X - mu
-    p = (2 * np.pi) ** (- k / 2) * np.linalg.det(Sigma2) ** (-0.5)\
+    return (
+        (2 * np.pi) ** (-k / 2)
+        * np.linalg.det(Sigma2) ** (-0.5)
         * np.exp(-0.5 * np.sum(np.dot(X, np.linalg.pinv(Sigma2)) * X, axis=1))
-    return p
+    )
 
 
 def visualizeFit(X, mu, sigma2):

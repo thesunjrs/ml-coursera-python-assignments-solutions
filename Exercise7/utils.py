@@ -177,7 +177,7 @@ def runkMeans(X, centroids, findClosestCentroids, computeCentroids,
     idx_history = []
     centroid_history = []
 
-    for i in range(max_iters):
+    for _ in range(max_iters):
         idx = findClosestCentroids(X, centroids)
 
         if plot_progress:

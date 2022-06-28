@@ -30,19 +30,10 @@ def mapFeature(X1, X2, degree=6):
     : array_like
         A matrix of of m rows, and columns depend on the degree of polynomial.
     """
-    if X1.ndim > 0:
-        out = [np.ones(X1.shape[0])]
-    else:
-        out = [np.ones(1)]
-
+    out = [np.ones(X1.shape[0])] if X1.ndim > 0 else [np.ones(1)]
     for i in range(1, degree + 1):
-        for j in range(i + 1):
-            out.append((X1 ** (i - j)) * (X2 ** j))
-
-    if X1.ndim > 0:
-        return np.stack(out, axis=1)
-    else:
-        return np.array(out)
+        out.extend((X1 ** (i - j)) * (X2 ** j) for j in range(i + 1))
+    return np.stack(out, axis=1) if X1.ndim > 0 else np.array(out)
 
 
 def plotDecisionBoundary(plotData, theta, X, y):

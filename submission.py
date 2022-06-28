@@ -19,7 +19,7 @@ class SubmissionBase:
         self.login = None
         self.token = None
         self.functions = OrderedDict()
-        self.args = dict()
+        self.args = {}
 
     def grade(self):
         print('\nSubmitting Solutions | Programming Exercise %s\n' % self.assignment_slug)
@@ -55,7 +55,10 @@ class SubmissionBase:
         if os.path.isfile(self.save_file):
             with open(self.save_file, 'rb') as f:
                 login, token = pickle.load(f)
-            reenter = input('Use token from last successful submission (%s)? (Y/n): ' % login)
+            reenter = input(
+                f'Use token from last successful submission ({login})? (Y/n): '
+            )
+
 
             if reenter == '' or reenter[0] == 'Y' or reenter[0] == 'y':
                 self.login, self.token = login, token
@@ -83,8 +86,7 @@ class SubmissionBase:
         return r.content
 
     def __iter__(self):
-        for part_id in self.functions:
-            yield part_id
+        yield from self.functions
 
     def __setitem__(self, key, value):
         self.functions[key] = value

@@ -184,14 +184,15 @@ def svmTrain(X, Y, C, kernelFunction, tol=1e-3, max_passes=5, args=()):
             passes = 0
 
     idx = alphas > 0
-    model = {'X': X[idx, :],
-             'y': Y[idx],
-             'kernelFunction': kernelFunction,
-             'b': b,
-             'args': args,
-             'alphas': alphas[idx],
-             'w': np.dot(alphas * Y, X)}
-    return model
+    return {
+        'X': X[idx, :],
+        'y': Y[idx],
+        'kernelFunction': kernelFunction,
+        'b': b,
+        'args': args,
+        'alphas': alphas[idx],
+        'w': np.dot(alphas * Y, X),
+    }
 
 
 def svmPredict(model, X):
@@ -238,10 +239,13 @@ def svmPredict(model, X):
     else:
         # other non-linear kernel
         for i in range(m):
-            predictions = 0
-            for j in range(model['X'].shape[0]):
-                predictions += model['alphas'][j] * model['y'][j] \
-                               * model['kernelFunction'](X[i, :], model['X'][j, :])
+            predictions = sum(
+                model['alphas'][j]
+                * model['y'][j]
+                * model['kernelFunction'](X[i, :], model['X'][j, :])
+                for j in range(model['X'].shape[0])
+            )
+
             p[i] = predictions
 
     pred[p >= 0] = 1
@@ -387,10 +391,7 @@ class PorterStemmer:
         if self.b[i] in 'aeiou':
             return 0
         if self.b[i] == 'y':
-            if i == self.k0:
-                return 1
-            else:
-                return not self.cons(i - 1)
+            return 1 if i == self.k0 else not self.cons(i - 1)
         return 1
 
     def m(self):
@@ -433,10 +434,7 @@ class PorterStemmer:
 
     def vowelinstem(self):
         """vowelinstem() is TRUE <=> k0,...j contains a vowel"""
-        for i in range(self.k0, self.j + 1):
-            if not self.cons(i):
-                return 1
-        return 0
+        return next((1 for i in range(self.k0, self.j + 1) if not self.cons(i)), 0)
 
     def doublec(self, j):
         """ doublec(j) is TRUE <=> j,(j-1) contain a double consonant. """
@@ -535,7 +533,7 @@ class PorterStemmer:
     def step1c(self):
         """step1c() turns terminal y to i when there is another vowel in the stem."""
         if self.ends("y") and self.vowelinstem():
-            self.b = self.b[:self.k] + 'i' + self.b[self.k+1:]
+            self.b = f'{self.b[:self.k]}i{self.b[self.k+1:]}'
 
     def step2(self):
         """step2() maps double suffices to single ones.
@@ -592,49 +590,43 @@ class PorterStemmer:
     def step4(self):
         """step4() takes off -ant, -ence etc., in context <c>vcvc<v>."""
         if self.b[self.k - 1] == 'a':
-            if self.ends("al"): pass
-            else: return
+            if not self.ends("al"):
+                return
         elif self.b[self.k - 1] == 'c':
             if self.ends("ance"): pass
-            elif self.ends("ence"): pass
-            else: return
+            elif not self.ends("ence"): return
         elif self.b[self.k - 1] == 'e':
-            if self.ends("er"): pass
-            else: return
+            if not self.ends("er"):
+                return
         elif self.b[self.k - 1] == 'i':
-            if self.ends("ic"): pass
-            else: return
+            if not self.ends("ic"):
+                return
         elif self.b[self.k - 1] == 'l':
             if self.ends("able"): pass
-            elif self.ends("ible"): pass
-            else: return
+            elif not self.ends("ible"): return
         elif self.b[self.k - 1] == 'n':
             if self.ends("ant"): pass
             elif self.ends("ement"): pass
             elif self.ends("ment"): pass
-            elif self.ends("ent"): pass
-            else: return
+            elif not self.ends("ent"): return
         elif self.b[self.k - 1] == 'o':
-            if self.ends("ion") and (self.b[self.j] == 's' or self.b[self.j] == 't'): pass
-            elif self.ends("ou"): pass
-            # takes care of -ous
-            else: return
+            if self.ends("ion") and self.b[self.j] in ['s', 't']: pass
+            elif not self.ends("ou"): return
         elif self.b[self.k - 1] == 's':
-            if self.ends("ism"): pass
-            else: return
+            if not self.ends("ism"):
+                return
         elif self.b[self.k - 1] == 't':
             if self.ends("ate"): pass
-            elif self.ends("iti"): pass
-            else: return
+            elif not self.ends("iti"): return
         elif self.b[self.k - 1] == 'u':
-            if self.ends("ous"): pass
-            else: return
+            if not self.ends("ous"):
+                return
         elif self.b[self.k - 1] == 'v':
-            if self.ends("ive"): pass
-            else: return
+            if not self.ends("ive"):
+                return
         elif self.b[self.k - 1] == 'z':
-            if self.ends("ize"): pass
-            else: return
+            if not self.ends("ize"):
+                return
         else:
             return
         if self.m() > 1:
